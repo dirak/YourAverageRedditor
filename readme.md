@@ -6,10 +6,10 @@ Your Average Redditor (yar) is a small python script for scraping, and imitating
 
 ```bash
 #A Basic test
-yar.py -io --subreddit learnpython
+yar.py -io learnpython
 
 #Changing the defaults
-yar.py -io --subreddit learnpython --pages 30 --comments 50
+yar.py -io learnpython --pages 30 --comments 50
 ```
 
 ## Motivation
