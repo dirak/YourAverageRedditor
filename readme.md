@@ -12,9 +12,14 @@ yar.py -io learnpython
 yar.py -io learnpython --pages 30 --comments 50
 ```
 
+## Dependencies
+
+numpy, beautifulsoup, argparse
+
 ## Motivation
 
-Reddit comments seem very derivative, so I wanted to create a script that would mimic that process. I also wanted to learn beautifulsoup!
+Reddit comments seem very derivative, so I wanted to create a script that would mimic that process.
+It is also a nice excuse to learn beautifulsoup.
 
 ## License
 
