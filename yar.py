@@ -72,7 +72,11 @@ def yar_output(args):
     
     for comment in comments:
         #CLI
-        print(comment)
+        try:
+            print(comment)
+        except UnicodeEncodeError:
+            #Windows doesn't show unicode characters
+            print(comment.encode("ascii", "backslashreplace"))
 
 ##Helper Functions##
 def get_next_link(url):
