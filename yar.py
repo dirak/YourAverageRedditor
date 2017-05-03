@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import argparse
 import bs4 as bs
 import numpy as np
@@ -33,7 +34,17 @@ def yar_learn(args):
     if args.mode == 'WIKI':
         if args.starts is None:
             print("Wiki mode requires starts.")
-        training_links = get_training_links(url, args.starts)
+            return
+        #going to do an experiment, follow next for 10 pages
+        n = 0
+        cur_link = url
+        while True:
+            next_link = get_next_link(url)
+            n+=1
+            if next_link is None or n > 40:
+                break
+            print("Training on Page {} of {}".format(n, 10))
+            training_links += get_training_links(url, args.starts)
     else:
         training_links.append(url)
 
@@ -47,7 +58,7 @@ def yar_learn(args):
 
 def yar_output(args):
     '''
-    I am outputting. I need a chain.
+    I am outputting. I need a file to load.
     '''
     filename = args.filename
     if filename is None:
@@ -58,7 +69,7 @@ def yar_output(args):
     except FileNotFoundError:
         print("Output mode requires a valid chain file.")
     else:
-        if False:
+        if True:
             #File many output
             attempts = 50
             comments = []
@@ -82,10 +93,23 @@ def yar_output(args):
     return
 
 ##Helper Functions##
+def get_next_link(url):
+    header = {'User-Agent':'Mozilla'}
+    try:        
+        req = Request(url, headers=header)
+        source = urlopen(req)
+        source = source.read().decode('utf-8')
+        soup = bs.BeautifulSoup(source, 'lxml')
+    except HTTPError as e:
+        print(e)
+    else:
+        for next_span in soup.select('span[class="next-button"]'):
+            return next_span.a.get('href')
+
 def get_training_links(url, starts_with):
     #get all urls from url that starts with starts_with
     header = {'User-Agent':'Mozilla'}
-    links = []   
+    links = []
     try:        
         req = Request(url, headers=header)
         source = urlopen(req)
@@ -97,8 +121,9 @@ def get_training_links(url, starts_with):
         for link in soup.find_all('a'):
             href = link.get('href')
             if href is not None:
-                if href.startswith(starts_with):
+                if href.lower().startswith(starts_with.lower()):
                     links.append(href)
+        
     return links
 
 def train_on_link(url, chain={}):
@@ -111,6 +136,8 @@ def train_on_link(url, chain={}):
         soup = bs.BeautifulSoup(source, 'lxml')
     except HTTPError as e:
         print(e)
+    except UnicodeEncodeError:
+        print("URL is unreachable due to encoding.")
     else:
         comments = get_comments(soup)
 
@@ -131,6 +158,7 @@ def build_chain(input_sentence, chain):
         key = (first, second)
         if key not in new_chain:
             new_chain[key] = []
+        #not checking for dupes makes a rudimentary weight system
         new_chain[key].append(third)
     return new_chain
 
@@ -170,16 +198,6 @@ def get_comments(soup):
 
 
 if __name__ == '__main__':
-    '''
-    There should be two modes, train-mode and output-mode. This will be controlled
-    by if you pass a .npy chain or not.
-    --url <url>: passes url. used in learning
-    --chain <filename>: loads filename.
-    --mode <LEARN|OUTPUT> default will be learn. Learn requires URL. Output requires chain.
-    --learn-link : will run train_on_link with url
-    --learn-wiki <starts_with> : will run get_training_links and then train_on_link
-    -v : verbose mode
-    '''
     parser = argparse.ArgumentParser(description='Just an average redditor.')
     parser.add_argument('-v', help='verbose', action="store_true")
     parser.add_argument('--url', dest='url', help='The url used for learning.')
