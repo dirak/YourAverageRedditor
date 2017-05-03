@@ -29,7 +29,6 @@ def yar_input(args):
     subreddit_link = "https://np.reddit.com/r/"+args.subreddit
     comment_link = subreddit_link + "/comments"
     training_links = []
-    number_of_pages = int(args.pages)
     current_page = 0
     current_link = subreddit_link
     
@@ -42,10 +41,10 @@ def yar_input(args):
     while True:
         next_link = get_next_link(current_link)
         current_page += 1
-        if next_link is None or current_page > number_of_pages:
+        if next_link is None or current_page > args.pages:
             break
         if args.v:
-            print("Scraping on page {} [{} of {}]".format(current_link, current_page, number_of_pages))
+            print("Scraping on page {} [{} of {}]".format(current_link, current_page, args.pages))
         training_links += get_training_links(current_link, comment_link)
         current_link = next_link
 
@@ -58,7 +57,6 @@ def yar_input(args):
 
 def yar_output(args):
     chain_filename = args.subreddit + "-sr"
-    number_of_comments = args.comments
     comments = []
     try:
         chain = np.load(chain_filename+".npy").item()
@@ -66,7 +64,7 @@ def yar_output(args):
         print("Output mode requires a subreddit to have been scraped. Try yar.py --help for more information.")
     else:
         while True:
-            if len(comments) >= number_of_comments:
+            if len(comments) >= args.comments:
                 break
             comment = build_comment(chain)
             if len(comment) <= 140 and len(comment) > 60:
@@ -187,10 +185,9 @@ if __name__ == '__main__':
     parser.add_argument('-i', help='input', action='store_true')
     parser.add_argument('-o', help='output', action='store_true')
     parser.add_argument('--subreddit', help='The subreddit you want to learn on.')
-    parser.add_argument('--pages', help='Number of pages to traverse. Default is 10', default=10)
-    parser.add_argument('--comments', help='Number of comments to generate. Default is 1', default=1)
+    parser.add_argument('--pages', help='Number of pages to traverse. Default is 10', default=10, type=int)
+    parser.add_argument('--comments', help='Number of comments to generate. Default is 1', default=1, type=int)
     args = parser.parse_args()
-    print(args)
     try:
         main(args)
     except KeyboardInterrupt:
