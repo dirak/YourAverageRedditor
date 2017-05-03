@@ -188,10 +188,11 @@ if __name__ == '__main__':
     parser.add_argument('-v', help='verbose', action='store_true')
     parser.add_argument('-i', help='input', action='store_true')
     parser.add_argument('-o', help='output', action='store_true')
-    parser.add_argument('--subreddit', help='The subreddit you want to learn on.')
+    parser.add_argument('subreddit', help='The subreddit you want to learn on.')
     parser.add_argument('--pages', help='Number of pages to traverse. Default is 2', default=2, type=int)
     parser.add_argument('--comments', help='Number of comments to generate. Default is 1', default=1, type=int)
     args = parser.parse_args()
+    print(args)
     try:
         main(args)
     except KeyboardInterrupt:
