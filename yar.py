@@ -2,6 +2,7 @@
 import argparse
 import bs4 as bs
 import numpy as np
+import sys
 from urllib.request import urlopen, Request
 from urllib.error import HTTPError
 from random import choice
@@ -9,88 +10,71 @@ from random import choice
 EOS = ['.', '?', '!']
 
 def main(args):
-    if args.mode in ['LEARN','WIKI']:
-        yar_learn(args)
-    elif args.mode in ['OUTPUT']:
+    if args.subreddit is None:
+        print("A subreddit is required. Try yar.py --help for more information.")
+        return
+    if args.i is False and args.o is False:
+        print("You must specify at least one of input or output. Try yar.py --help for more information.")
+    if args.i:
+        yar_input(args)
+    if args.o:
         yar_output(args)
 
-def yar_learn(args):
+def yar_input(args):
     '''
-    I am learning. I need a URL to learn on, and a file to save to.
+    I am learning on a particular subreddit.
     '''
-    filename = args.filename
-    url = args.url
-    if filename is None or url is None:
-        print("Learn mode requires a filename and url")
-        return
-    #setup the chain
+    
+    chain_filename = args.subreddit + "-sr"
+    subreddit_link = "https://np.reddit.com/r/"+args.subreddit
+    comment_link = subreddit_link + "/comments"
+    training_links = []
+    number_of_pages = int(args.pages)
+    current_page = 0
+    current_link = subreddit_link
+    
     try:
-        chain = np.load(filename).item()
+        chain = np.load(chain_filename).item()
     except FileNotFoundError:
         chain = {}
-    #start training
-    
-    training_links = []
-    if args.mode == 'WIKI':
-        if args.starts is None:
-            print("Wiki mode requires starts.")
-            return
-        #going to do an experiment, follow next for 10 pages
-        n = 0
-        cur_link = url
-        while True:
-            next_link = get_next_link(url)
-            n+=1
-            if next_link is None or n > 40:
-                break
-            print("Training on Page {} of {}".format(n, 10))
-            training_links += get_training_links(url, args.starts)
-    else:
-        training_links.append(url)
+
+    #Traverse subreddit
+    while True:
+        next_link = get_next_link(current_link)
+        current_page += 1
+        if next_link is None or current_page > number_of_pages:
+            break
+        if args.v:
+            print("Scraping on page {} [{} of {}]".format(current_link, current_page, number_of_pages))
+        training_links += get_training_links(current_link, comment_link)
+        current_link = next_link
 
     for index, link in enumerate(training_links):
         if args.v:
             print("Learning on {} of {} links.".format(index, len(training_links)))
         chain = train_on_link(link, chain)
-
-    np.save(filename, chain)
+        np.save(chain_filename, chain)#naive way to save progress
     return
 
 def yar_output(args):
-    '''
-    I am outputting. I need a file to load.
-    '''
-    filename = args.filename
-    if filename is None:
-        print("Output mode requires a filename")
-        return
+    chain_filename = args.subreddit + "-sr"
+    number_of_comments = args.comments
+    comments = []
     try:
-        chain = np.load(filename).item()
+        chain = np.load(chain_filename+".npy").item()
     except FileNotFoundError:
-        print("Output mode requires a valid chain file.")
+        print("Output mode requires a subreddit to have been scraped. Try yar.py --help for more information.")
     else:
-        if True:
-            #File many output
-            attempts = 50
-            comments = []
-            while len(comments) < attempts:
-                comment = build_comment(chain)
-                if len(comment) <= 140 and len(comment) > 100:
-                    print("{} out of {} Comments".format(len(comments), attempts))
-                    comments.append(comment)
-                    
-            with open("Output.txt","w") as file:
-                file.write('\n'.join(comments))
-        else:
-            #CLI single output
-            while True:
-                comment = build_comment(chain)
-                if len(comment) <= 140 and len(comment) > 100:
-                    print(len(comment))
-                    print(comment + ".")
-                    break
-        
-    return
+        while True:
+            if len(comments) >= number_of_comments:
+                break
+            comment = build_comment(chain)
+            if len(comment) <= 140 and len(comment) > 60:
+                comments.append(comment)
+    
+    for comment in comments:
+        #CLI
+        print(comment)
 
 ##Helper Functions##
 def get_next_link(url):
@@ -189,7 +173,7 @@ def get_comments(soup):
     for entry in entries:
         form = entry.find_all('form')
         for f in form:
-            if "I am a bot" in f.text:
+            if "I am a bot" in f.text:#bot comments are not representative of the subreddit
                 continue
             else:
                 comments.append(f.text)
@@ -199,14 +183,15 @@ def get_comments(soup):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Just an average redditor.')
-    parser.add_argument('-v', help='verbose', action="store_true")
-    parser.add_argument('--url', dest='url', help='The url used for learning.')
-    parser.add_argument('--mode', dest='mode',
-                        help='Which mode to run in. (Default: LEARN)',
-                        default = 'LEARN', choices = ['LEARN', 'WIKI', 'OUTPUT'])
-    parser.add_argument('--chain', dest='filename',
-                        help='Filename of the markov chain.')
-    parser.add_argument('--starts', dest='starts', help='Used in wiki learning.')
+    parser.add_argument('-v', help='verbose', action='store_true')
+    parser.add_argument('-i', help='input', action='store_true')
+    parser.add_argument('-o', help='output', action='store_true')
+    parser.add_argument('--subreddit', help='The subreddit you want to learn on.')
+    parser.add_argument('--pages', help='Number of pages to traverse. Default is 10', default=10)
+    parser.add_argument('--comments', help='Number of comments to generate. Default is 1', default=1)
     args = parser.parse_args()
     print(args)
-    main(args)
+    try:
+        main(args)
+    except KeyboardInterrupt:
+        sys.exit()
