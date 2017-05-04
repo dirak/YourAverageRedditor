@@ -7,14 +7,10 @@ Your Average Redditor (yar) is a small python script for scraping, and imitating
 ```bash
 #A Basic test
 yar.py -io learnpython
-
-#Changing the defaults
-yar.py -io learnpython --pages 30 --comments 50
 ```
 
-`yar.py -io dwarffortress --pages 40`
-
-```
+```bash
+yar.py -io dwarffortress --pages 40 --comments 4
 Just think - it's not DF - it's definitely the agents or how and cage traps.
 Explorers - The Tombs It became necessary to trade with except for places you don't put a hotel in hell.
 Oh wait, I think I'm too busy with school right now it's to reduce lag.
