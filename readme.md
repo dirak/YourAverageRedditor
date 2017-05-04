@@ -14,10 +14,10 @@ yar.py -io learnpython
 yar.py -io dwarffortress --pages 40 --comments 4
 
 #output
-Just think - it's not DF - it's definitely the agents or how and cage traps.
-Explorers - The Tombs It became necessary to trade with except for places you don't put a hotel in hell.
-Oh wait, I think I'm too busy with school right now it's to reduce lag.
-Some witnesses say that your fortress is seeming to get easier once you get dragons?
+"Just think - it's not DF - it's definitely the agents or how and cage traps."
+"Explorers - The Tombs It became necessary to trade with except for places you don't put a hotel in hell."
+"Oh wait, I think I'm too busy with school right now it's to reduce lag."
+"Some witnesses say that your fortress is seeming to get easier once you get dragons?"
 ```
 
 ## Dependencies
