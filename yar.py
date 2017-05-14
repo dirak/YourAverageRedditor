@@ -30,7 +30,7 @@ def yar_input(args):
     comment_link = subreddit_link + "/comments"
     training_links = []
     current_page = 0
-    current_link = subreddit_link
+    current_link = subreddit_link  + "/new/"
     
     try:
         chain = np.load(chain_filename).item()
